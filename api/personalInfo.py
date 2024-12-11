@@ -21,7 +21,7 @@ class StudentAPI:
             return jsonify(data)
     class _Vasanth(Resource):
         def get(self):
-            data = {'DOB': '06-27-2009', 'Name': 'Vasath Rajasekaran', 'Favorite Color': 'Black'}
+            data = {'DOB': '06-27-2009', 'Name': 'Vasanth Rajasekaran', 'Favorite Color': 'Black'}
             return jsonify(data)
 
     class _NikhilN(Resource):
@@ -31,8 +31,12 @@ class StudentAPI:
         
     class _Jowan(Resource):
         def get(self):
-            # Use the helper method to get Jeff's details
             data = {'DOB': '07-02-2008', 'Name': 'Jowan Elzein', 'Favorite Color': 'Purple'}
+            return jsonify(data)
+
+    class _BULK_INFO(Resource):
+        def get(self):
+            data = {'Nikhilm': {'DOB': '01-20-2009', 'Name': 'Nikhil Maturi', 'Favorite Color': 'Black'}, 'Mihir': {'DOB': '04-09-2009', 'Name': 'Mihir Thaha', 'Favorite Color': 'Purple'}, 'Nikhiln': {'DOB': '05-16-2009', 'Name': 'Nikhil Narayan', 'Favorite Color': 'Blue'}, 'Aarush': {'DOB': '04-09-2009', 'Name': 'Aarush Gowda', 'Favorite Color': 'Grey'}, 'Vasanth': {'DOB': '06-27-2009', 'Name': 'Vasanth Rajasekaran', 'Favorite Color': 'Black'}, 'Jowan': {'DOB': '07-02-2008', 'Name': 'Jowan Elzein', 'Favorite Color': 'Purple'}}
             return jsonify(data)
 
     # building RESTapi endpoint
@@ -42,3 +46,4 @@ class StudentAPI:
     api.add_resource(_NikhilN, '/student/nikhiln')
     api.add_resource(_Jowan, '/student/jowan')
     api.add_resource(_Vasanth, '/student/vasanth')
+    api.add_resource(_BULK_INFO, '/student/bulk')
