@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 # initialize a flask application (app)
@@ -6,6 +6,13 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, origins='*')  # Allow all origins (*)
 
 # ... your existing Flask
+
+@app.route('/check-auth')
+def check_auth():
+    token = request.cookies.get('jwt_python_flask')
+    if token:
+        return jsonify({'isAuthenticated': True})
+    return jsonify({'isAuthenticated': False})
 
 # add an api endpoint to flask app
 @app.route('/api/john')
