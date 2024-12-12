@@ -109,6 +109,14 @@ def index():
     print("Home:", current_user)
     return render_template("index.html")
 
+
+@app.route('/check-auth')
+def check_auth():
+    token = request.cookies.get('jwt_python_flask')
+    if token:
+        return jsonify({'isAuthenticated': True})
+    return jsonify({'isAuthenticated': False})
+
 @app.route('/users/table')
 @login_required
 def utable():
