@@ -1,3 +1,4 @@
+cd
 # imports from flask
 import json
 import os

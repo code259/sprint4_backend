@@ -17,3 +17,5 @@ pymysql
 psycopg2-binary
 python_dotenv
 boto3
+chess==1.9.4
+tqdm==4.57.0
