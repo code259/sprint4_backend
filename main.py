@@ -9,8 +9,8 @@ from flask_login import current_user, login_required
 from flask import current_app
 from werkzeug.security import generate_password_hash
 import shutil
-
-
+from stockfish import Stockfish
+import platform
 
 # import "objects" from "this" project
 from __init__ import app, db, login_manager  # Key Flask objects 
@@ -108,6 +108,24 @@ def index():
     print("Home:", current_user)
     return render_template("index.html")
 
+@app.route('/get-move', methods=["POST"])
+def get_move():
+    data = request.get_json()
+    fen = data["fen"]
+
+    system = platform.system()
+
+    if system == "Darwin":
+        stockfish_path = "./stockfish"
+    elif system == "Windows":
+        stockfish_path = "./stockfish-windows.exe"
+    else:
+        pass
+
+    stockfish = Stockfish(stockfish_path)
+    stockfish.set_fen_position(fen)
+    best_move = stockfish.get_best_move()
+    return jsonify({"move": best_move}), 200
 
 @app.route('/check-auth')
 def check_auth():
@@ -132,7 +150,7 @@ def u2table():
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
- 
+
 @app.route('/users/delete/<int:user_id>', methods=['DELETE'])
 @login_required
 def delete_user(user_id):
