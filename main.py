@@ -112,6 +112,8 @@ def index():
 def get_move():
     data = request.get_json()
     fen = data["fen"]
+    elo = data.get("elo", 1200)
+    print("this is the elo requested", elo)
 
     system = platform.system()
 
@@ -124,8 +126,46 @@ def get_move():
 
     stockfish = Stockfish(stockfish_path)
     stockfish.set_fen_position(fen)
+    stockfish.set_elo_rating(elo)
     best_move = stockfish.get_best_move()
     return jsonify({"move": best_move}), 200
+
+@app.route('/analyze-move', methods=["POST"])
+def analyze_move():
+    data = request.get_json()
+    fen = data["fen"]
+    last_eval = data.get("last_evaluation", 0.0) #must be sent by client, and is the evaluation after previous move
+
+    system = platform.system()
+
+    if system == "Darwin":
+        stockfish_path = "./stockfish"
+    elif system == "Windows":
+        stockfish_path = "./stockfish-windows.exe"
+    else:
+        pass
+
+    stockfish = Stockfish(stockfish_path)
+    stockfish.set_fen_position(fen)
+    evaluation = stockfish.get_evaluation()
+    evaluation = evaluation['value'] / 100.0 #converting from centipawns to pawns
+
+    status = ""
+    if evaluation - last_eval > 1.0:
+        status = "Brilliant"
+    if evaluation - last_eval > 0.5:
+        status = "Excellent"
+    if evaluation - last_eval > 0:
+        status = "Good"
+    if evaluation - last_eval < -0.5:
+        status = "Inaccuracy"
+    if evaluation - last_eval < -1.0:
+        status = "Mistake"
+    if evaluation - last_eval < -3.0:
+        status = "Blunder"
+
+    best_move = stockfish.get_best_move()
+    return jsonify({"evaluation": evaluation, "best move": best_move, "status": status}), 200
 
 @app.route('/check-auth')
 def check_auth():
@@ -250,10 +290,10 @@ def backup_data():
 def restore_data_command():
     data = load_data_from_json()
     restore_data(data)
-    
+
 # Register the custom command group with the Flask application
 app.cli.add_command(custom_cli)
-        
+
 # this runs the flask application on the development server
 if __name__ == "__main__":
     # change name for testing
