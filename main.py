@@ -158,7 +158,7 @@ def analyze_move():
     if evaluation - last_eval > 0:
         status = "Good"
     if evaluation - last_eval < -0.5:
-        status = "Inaccuracy"
+        status = "Inaccurate"
     if evaluation - last_eval < -1.0:
         status = "Mistake"
     if evaluation - last_eval < -3.0:
@@ -200,7 +200,7 @@ def delete_user(user_id):
         return jsonify({'message': 'User deleted successfully'}), 200
     return jsonify({'error': 'User not found'}), 404
 
-@app.route('/users/reset_password/<int:user_id>', methods=['POST'])
+@app.route('/users/reset_password/<int:user_id>', methods=['GET'])
 @login_required
 def reset_password(user_id):
     if current_user.role != 'Admin':
