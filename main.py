@@ -11,6 +11,12 @@ from werkzeug.security import generate_password_hash
 import shutil
 from stockfish import Stockfish
 import platform
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
+
+
 
 # import "objects" from "this" project
 from __init__ import app, db, login_manager  # Key Flask objects 
@@ -108,6 +114,7 @@ def index():
     print("Home:", current_user)
     return render_template("index.html")
 
+
 @app.route('/get-move', methods=["POST"])
 def get_move():
     data = request.get_json()
@@ -129,6 +136,54 @@ def get_move():
     stockfish.set_elo_rating(elo)
     best_move = stockfish.get_best_move()
     return jsonify({"move": best_move}), 200
+
+
+
+Base = declarative_base()
+class ChessFact(Base):
+    __tablename__ = 'chess_facts'
+    id = Column(Integer, primary_key=True)
+    fact = Column(String, nullable=False)
+
+engine = create_engine('sqlite:///chess_facts.db')
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+# Populate the database with facts if empty
+if not session.query(ChessFact).first():
+    facts = [
+        ChessFact(fact="The longest chess game theoretically possible is 5,949 moves."),
+        ChessFact(fact="The first chessboard with alternating light and dark squares appeared in Europe in 1090."),
+        ChessFact(fact="The word 'checkmate' comes from the Persian phrase 'Shah Mat,' meaning 'the king is helpless.'"),
+        ChessFact(fact="Chess originated in India around the 6th century as a game called 'Chaturanga.'"),
+        ChessFact(fact="The first modern chess tournament was held in London in 1851."),
+        ChessFact(fact="The first world chess champion was Wilhelm Steinitz in 1886."),
+        ChessFact(fact="The shortest possible chess game is called Fool's Mate, which can be achieved in just two moves."),
+        ChessFact(fact="Chess became a part of the Olympic Games in 1924."),
+        ChessFact(fact="The number of possible unique chess games is greater than the number of atoms in the observable universe."),
+        ChessFact(fact="Bobby Fischer, an American chess prodigy, became the youngest U.S. Chess Champion at the age of 14.")
+    ]
+    session.add_all(facts)
+    session.commit()
+
+
+@app.route('/api/chess/history', methods=['GET'])
+def chess_history():
+    """Endpoint to provide a brief history of chess."""
+    return jsonify({"message": "Chess is a game that dates back over 1,500 years, originating in India. It evolved into its current form in the 15th century in Europe."})
+
+@app.route('/api/chess/random_fact', methods=['GET'])
+def random_fact():
+    """Endpoint to fetch a random chess fact."""
+    fact = session.query(ChessFact).order_by(func.random()).first()
+    return jsonify({"fact": fact.fact})
+
+
+@app.route('/test', methods=["POST"])
+def test():
+    return jsonify({"message": "Test successful"}), 200
 
 @app.route('/analyze-move', methods=["POST"])
 def analyze_move():
@@ -297,4 +352,4 @@ app.cli.add_command(custom_cli)
 # this runs the flask application on the development server
 if __name__ == "__main__":
     # change name for testing
-    app.run(debug=True, host="0.0.0.0", port="8887")
+    app.run(debug=True, host="0.0.0.0", port="9000")
