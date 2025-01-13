@@ -33,7 +33,7 @@ from api.messages_api import messages_api # Adi added this, messages for his web
 from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.personalInfo import student_api
-
+from api.intro import intro_api
 from api.vote import vote_api
 # database Initialization functions
 from model.carChat import CarChat
@@ -61,7 +61,7 @@ app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
 app.register_blueprint(student_api)
-
+app.register_blueprint(intro_api)
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
 
@@ -213,7 +213,7 @@ def analyze_move():
     if evaluation - last_eval > 0:
         status = "Good"
     if evaluation - last_eval < -0.5:
-        status = "Inaccuracy"
+        status = "Inaccurate"
     if evaluation - last_eval < -1.0:
         status = "Mistake"
     if evaluation - last_eval < -3.0:
@@ -255,7 +255,7 @@ def delete_user(user_id):
         return jsonify({'message': 'User deleted successfully'}), 200
     return jsonify({'error': 'User not found'}), 404
 
-@app.route('/users/reset_password/<int:user_id>', methods=['POST'])
+@app.route('/users/reset_password/<int:user_id>', methods=['GET'])
 @login_required
 def reset_password(user_id):
     if current_user.role != 'Admin':
