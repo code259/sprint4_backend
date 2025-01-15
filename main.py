@@ -218,6 +218,8 @@ def analyze_move():
         status = "Mistake"
     if evaluation - last_eval < -3.0:
         status = "Blunder"
+    else:
+        status = "Neutral"
 
     best_move = stockfish.get_best_move()
     return jsonify({"evaluation": evaluation, "best move": best_move, "status": status}), 200
