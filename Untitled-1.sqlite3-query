@@ -1,0 +1,10 @@
+-- database: /Users/ayahelzein/sprint4_backend/instance/volumes/user_management.db
+
+CREATE TABLE `leaderboard_table` (
+	_rank INTEGER NOT NULL, 
+	_player VARCHAR(255) NOT NULL, 
+	_wins INTEGER, 
+	PRIMARY KEY (_rank), 
+	UNIQUE (_player)
+);
+INSERT INTO `leaderboard_table` SELECT * FROM `sections`;
