@@ -1,4 +1,4 @@
-from flask import Blueprint, request, g
+from flask import Blueprint, request, g, jsonify
 from flask_restful import Api, Resource
 from api.jwt_authorize import token_required
 from model.pastGame import pastGame
@@ -48,20 +48,12 @@ class pastGameAPI:
         
         
         def get(self):
-            """Get user information."""
-            data = request.get_json()
-            if not data or 'user_id' not in data:
-                return {"message": "User ID is required"}, 400
-            
-            user = pastGame.query.get(data['id'])
-            if not user:
-                return {"message": "User not found"}, 404
-            
-            return {
-                "uid": self.uid,
-                "winner": self.winner,
-                "elo": self.elo,
-            }, 200
+            games = pastGame.query.all()
+            json_ready = []
+            for game in games:
+                game_data = game.read()
+                json_ready.append(game_data)
+            return jsonify(json_ready)
         
 # Register the resource
 api.add_resource(pastGameAPI._CRUD, '/pastgame')
