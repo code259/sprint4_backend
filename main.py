@@ -7,6 +7,7 @@ from flask_login import current_user, login_user, logout_user
 from flask.cli import AppGroup
 from flask_login import current_user, login_required
 from flask import current_app
+from flask import Blueprint
 from werkzeug.security import generate_password_hash
 import shutil
 from stockfish import Stockfish
@@ -15,6 +16,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
+from model.userstats import UserStats, initUserStats
 
 
 
@@ -180,6 +182,144 @@ def random_fact():
     fact = session.query(ChessFact).order_by(func.random()).first()
     return jsonify({"fact": fact.fact})
 
+@app.route('/api/user_stats', methods=['POST'])
+def add_user_stats():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    wins = data.get('wins', 0)
+    losses = data.get('losses', 0)
+
+
+    # Check if the user_id already exists in the database
+    existing_stats = UserStats.query.filter_by(user_id=user_id).first()
+    if existing_stats:
+        return jsonify({"error": "User stats for this user_id already exist"}), 400
+
+
+    # Create a new UserStats object
+    new_stats = UserStats(user_id=user_id, wins=wins, losses=losses)
+
+
+    try:
+        # Add the new stats to the session and commit
+        db.session.add(new_stats)
+        db.session.commit()
+        return jsonify({"message": "User stats added successfully", "data": new_stats.read()}), 201
+    except Exception as e:
+        # Rollback the session in case of an error
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+   
+
+
+@app.route('/api/user_stats/update_score', methods=['POST'])
+def update_user_score():
+    """
+    Update the win/loss score for a user.
+    """
+    data = request.get_json()
+    user_id = data.get('user_id')
+    result = data.get('result')  # 'win' or 'loss'
+
+
+    if not user_id or not result:
+        return jsonify({"error": "User ID and result are required"}), 400
+
+
+    user_stats = UserStats.query.filter_by(user_id=user_id).first()
+    if not user_stats:
+        return jsonify({"error": "User not found"}), 404
+
+
+    try:
+        if result == 'win':
+            user_stats.wins += 1
+        elif result == 'loss':
+            user_stats.losses += 1
+        else:
+            return jsonify({"error": "Invalid result value"}), 400
+
+
+        db.session.commit()
+        return jsonify({"message": "User stats updated successfully", "data": user_stats.read()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# Blueprint for admin API
+admin_api = Blueprint('admin_api', __name__, url_prefix='/api/admin')
+
+@app.route('/api/admin/create_user', methods=['POST'])
+def create_user():
+    """
+    Create a new user with a specified ID.
+    Expects JSON payload with 'user_id', and optional 'wins' and 'losses'.
+    """
+    data = request.get_json()
+    user_id = data.get('user_id')
+    wins = data.get('wins', 0)
+    losses = data.get('losses', 0)
+
+    if not user_id:
+        return jsonify({"error": "User ID is required"}), 400
+
+    # Check if the user already exists
+    existing_user = UserStats.query.filter_by(user_id=user_id).first()
+    if existing_user:
+        return jsonify({"error": "User with this ID already exists"}), 400
+
+    # Create the user
+    new_user = UserStats(user_id=user_id, wins=wins, losses=losses)
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "User created successfully", "data": new_user.read()}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+
+
+@app.route('/api/admin/delete_user', methods=['DELETE'])
+def delete_user():
+    """
+    Delete a user by their ID.
+    Expects JSON payload with 'user_id'.
+    """
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    if not user_id:
+        return jsonify({"error": "User ID is required"}), 400
+
+    # Find and delete the user
+    user = UserStats.query.filter_by(user_id=user_id).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": f"User with ID {user_id} deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# Register the Blueprint with the Flask app
+app.register_blueprint(admin_api)
+
+
+@app.route('/api/user_stats/<int:user_id>', methods=['GET'])
+def get_user_stats(user_id):
+    """
+    API endpoint to fetch user stats by user ID.
+    """
+    user_stats = UserStats.query.filter_by(user_id=user_id).first()
+    if not user_stats:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify(user_stats.read()), 200
 
 @app.route('/test', methods=["POST"])
 def test():
@@ -250,7 +390,7 @@ def uploaded_file(filename):
 
 @app.route('/users/delete/<int:user_id>', methods=['DELETE'])
 @login_required
-def delete_user(user_id):
+def delete_user_api(user_id):
     user = User.query.get(user_id)
     if user:
         user.delete()
@@ -278,10 +418,11 @@ custom_cli = AppGroup('custom', help='Custom commands')
 # Define a command to run the data generation functions
 @custom_cli.command('generate_data')
 def generate_data():
+    initUserStats()
     initUsers()
     initSections()
     initGroups()
-    initChannels()
+    # initChannels()
     initPosts()
     initNestPosts()
     initVotes()
@@ -354,4 +495,4 @@ app.cli.add_command(custom_cli)
 # this runs the flask application on the development server
 if __name__ == "__main__":
     # change name for testing
-    app.run(debug=True, host="0.0.0.0", port="9000")
+    app.run(debug=True, host="0.0.0.0", port="8887")
