@@ -42,28 +42,28 @@ def get_data():
 
     return jsonify(InfoDb)
 
-class ChessFact(Base):
-    __tablename__ = 'chess_facts'
-    id = Column(Integer, primary_key=True)
-    fact = Column(String, nullable=False)
+# class ChessFact(Base):
+#     __tablename__ = 'chess_facts'
+#     id = Column(Integer, primary_key=True)
+#     fact = Column(String, nullable=False)
 
 
-# Populate the database with facts if empty
-if not session.query(ChessFact).first():
-    facts = [
-        ChessFact(fact="The longest chess game theoretically possible is 5,949 moves."),
-        ChessFact(fact="The first chessboard with alternating light and dark squares appeared in Europe in 1090."),
-        ChessFact(fact="The word 'checkmate' comes from the Persian phrase 'Shah Mat,' meaning 'the king is helpless.'"),
-        ChessFact(fact="Chess originated in India around the 6th century as a game called 'Chaturanga.'"),
-        ChessFact(fact="The first modern chess tournament was held in London in 1851."),
-        ChessFact(fact="The first world chess champion was Wilhelm Steinitz in 1886."),
-        ChessFact(fact="The shortest possible chess game is called Fool's Mate, which can be achieved in just two moves."),
-        ChessFact(fact="Chess became a part of the Olympic Games in 1924."),
-        ChessFact(fact="The number of possible unique chess games is greater than the number of atoms in the observable universe."),
-        ChessFact(fact="Bobby Fischer, an American chess prodigy, became the youngest U.S. Chess Champion at the age of 14.")
-    ]
-    session.add_all(facts)
-    session.commit()
+# # Populate the database with facts if empty
+# if not session.query(ChessFact).first():
+#     facts = [
+#         ChessFact(fact="The longest chess game theoretically possible is 5,949 moves."),
+#         ChessFact(fact="The first chessboard with alternating light and dark squares appeared in Europe in 1090."),
+#         ChessFact(fact="The word 'checkmate' comes from the Persian phrase 'Shah Mat,' meaning 'the king is helpless.'"),
+#         ChessFact(fact="Chess originated in India around the 6th century as a game called 'Chaturanga.'"),
+#         ChessFact(fact="The first modern chess tournament was held in London in 1851."),
+#         ChessFact(fact="The first world chess champion was Wilhelm Steinitz in 1886."),
+#         ChessFact(fact="The shortest possible chess game is called Fool's Mate, which can be achieved in just two moves."),
+#         ChessFact(fact="Chess became a part of the Olympic Games in 1924."),
+#         ChessFact(fact="The number of possible unique chess games is greater than the number of atoms in the observable universe."),
+#         ChessFact(fact="Bobby Fischer, an American chess prodigy, became the youngest U.S. Chess Champion at the age of 14.")
+#     ]
+#     session.add_all(facts)
+#     session.commit()
 
 
 @app.route('/api/chess/history', methods=['GET'])
