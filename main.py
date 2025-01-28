@@ -35,6 +35,7 @@ from api.carChat import car_chat_api
 from api.personalInfo import student_api
 from api.intro import intro_api
 from api.vote import vote_api
+from api.evaluation import evaluation_api
 # database Initialization functions
 from model.carChat import CarChat
 from model.user import User, initUsers
@@ -44,6 +45,7 @@ from model.channel import Channel, initChannels
 from model.post import Post, initPosts
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
+from model.evaluation import Evaluation, initEvaluation
 # server only Views
 
 # register URIs for api endpoints
@@ -62,6 +64,7 @@ app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
 app.register_blueprint(student_api)
 app.register_blueprint(intro_api)
+app.register_blueprint(evaluation_api)
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
 
@@ -281,10 +284,11 @@ def generate_data():
     initUsers()
     initSections()
     initGroups()
-    initChannels()
+   # initChannels()
     initPosts()
     initNestPosts()
     initVotes()
+    initEvaluation()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
@@ -306,6 +310,7 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
+        data['evaluations'] = [evaluation.read() for evaluation in Evaluation.query.all()]
     return data
 
 # Save extracted data to JSON files
@@ -320,7 +325,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'evaluations']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -332,7 +337,8 @@ def restore_data(data):
         _ = Section.restore(data['sections'])
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
-        _ = Post.restore(data['posts'])
+        # _ = Post.restore(data['posts'])
+        _ = Evaluation.restore(data['evaluations'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
