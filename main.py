@@ -36,8 +36,10 @@ from api.personalInfo import student_api
 from api.pgn import pgn_api
 from api.intro import intro_api
 from api.vote import vote_api
+from api.leaderboard import leaderboard_api
 # database Initialization functions
 from model.carChat import CarChat
+from model.leaderboard import initLeaderboards
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -57,6 +59,7 @@ app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
 app.register_blueprint(car_chat_api)
+app.register_blueprint(leaderboard_api)
 # Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
@@ -282,6 +285,7 @@ custom_cli = AppGroup('custom', help='Custom commands')
 @custom_cli.command('generate_data')
 def generate_data():
     initUsers()
+    initLeaderboards()
     initSections()
     initGroups()
     # initChannels()
@@ -325,7 +329,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'pgn']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'leaderboards', 'pgn']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
