@@ -38,6 +38,7 @@ from api.intro import intro_api
 from api.vote import vote_api
 from api.leaderboard import leaderboard_api
 from api.evaluation import evaluation_api
+from api.skill import skill_api
 # database Initialization functions
 from model.pastGame import pastGame, initPastGames
 from model.carChat import CarChat
@@ -47,6 +48,7 @@ from model.section import Section, initSections
 from model.group import Group, initGroups
 from model.channel import Channel, initChannels
 from model.post import Post, initPosts
+from model.skill import Skill, initSkills
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
 from model.pgn import Pgn, initPgn
@@ -69,6 +71,7 @@ app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
+app.register_blueprint(skill_api)
 app.register_blueprint(student_api)
 app.register_blueprint(pgn_api)
 app.register_blueprint(intro_api)
@@ -304,11 +307,12 @@ custom_cli = AppGroup('custom', help='Custom commands')
 # Define a command to run the data generation functions
 @custom_cli.command('generate_data')
 def generate_data():
+    initSkills()
     initUsers()
     initLeaderboards()
     initSections()
     initGroups()
-   # # # initChannels()
+    # initChannels()
     initPosts()
     initNestPosts()
     initVotes()
