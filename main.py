@@ -33,11 +33,15 @@ from api.messages_api import messages_api # Adi added this, messages for his web
 from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.personalInfo import student_api
+from api.pgn import pgn_api
 from api.intro import intro_api
 from api.vote import vote_api
+from api.leaderboard import leaderboard_api
+from api.evaluation import evaluation_api
 # database Initialization functions
 from model.pastGame import pastGame, initPastGames
 from model.carChat import CarChat
+from model.leaderboard import initLeaderboards
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -45,6 +49,8 @@ from model.channel import Channel, initChannels
 from model.post import Post, initPosts
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
+from model.pgn import Pgn, initPgn
+from model.evaluation import Evaluation, initEvaluation
 # server only Views
 
 # register URIs for api endpoints
@@ -57,13 +63,16 @@ app.register_blueprint(group_api)
 app.register_blueprint(section_api)
 app.register_blueprint(car_chat_api)
 app.register_blueprint(pastGame_api)
+app.register_blueprint(leaderboard_api)
 # Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
 app.register_blueprint(student_api)
+app.register_blueprint(pgn_api)
 app.register_blueprint(intro_api)
+app.register_blueprint(evaluation_api)
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
 
@@ -296,13 +305,16 @@ custom_cli = AppGroup('custom', help='Custom commands')
 @custom_cli.command('generate_data')
 def generate_data():
     initUsers()
+    initLeaderboards()
     initSections()
     initGroups()
-    # initChannels()
+   # # # initChannels()
     initPosts()
     initNestPosts()
     initVotes()
     initPastGames()
+    initPgn()
+    initEvaluation()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
@@ -324,6 +336,8 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
+        data['pgn'] = [pgn.read() for pgn in Pgn.query.all()]
+        data['evaluations'] = [evaluation.read() for evaluation in Evaluation.query.all()]
         data['past_games'] = [game.read() for game in pastGame.query.all()]
     return data
 
@@ -339,7 +353,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games', 'leaderboards', 'pgn', 'evaluations']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -351,8 +365,9 @@ def restore_data(data):
         _ = Section.restore(data['sections'])
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
-        _ = Post.restore(data['posts'])
+        # # _ = Post.restore(data['posts'])
         _ = pastGame.restore(data['past_games'])
+        _ = Evaluation.restore(data['evaluations'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
