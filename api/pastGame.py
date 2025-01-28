@@ -106,10 +106,6 @@ class pastGameAPI:
                 # Handle unexpected errors
                 print(f"Error deleting game log: {str(e)}")
                 return {"message": f"Unexpected error: {str(e)}"}, 500
-
-
-
-
         
         
         def get(self):
