@@ -7,14 +7,20 @@ from flask_login import current_user, login_user, logout_user
 from flask.cli import AppGroup
 from flask_login import current_user, login_required
 from flask import current_app
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import shutil
 from stockfish import Stockfish
 import platform
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
+import jwt
 
 # import "objects" from "this" project
 from __init__ import app, db, login_manager  # Key Flask objects 
 # API endpoints
+from api.pastGame import pastGame_api
 from api.user import user_api 
 from api.pfp import pfp_api
 from api.nestImg import nestImg_api # Justin added this, custom format for his website
@@ -27,11 +33,16 @@ from api.messages_api import messages_api # Adi added this, messages for his web
 from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.personalInfo import student_api
+from api.pgn import pgn_api
 from api.intro import intro_api
 from api.vote import vote_api
+from api.leaderboard import leaderboard_api
+from api.evaluation import evaluation_api
 from api.skill import skill_api
 # database Initialization functions
+from model.pastGame import pastGame, initPastGames
 from model.carChat import CarChat
+from model.leaderboard import initLeaderboards
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -40,6 +51,8 @@ from model.post import Post, initPosts
 from model.skill import Skill, initSkills
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
+from model.pgn import Pgn, initPgn
+from model.evaluation import Evaluation, initEvaluation
 # server only Views
 
 # register URIs for api endpoints
@@ -51,6 +64,8 @@ app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
 app.register_blueprint(car_chat_api)
+app.register_blueprint(pastGame_api)
+app.register_blueprint(leaderboard_api)
 # Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
@@ -58,7 +73,9 @@ app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
 app.register_blueprint(skill_api)
 app.register_blueprint(student_api)
+app.register_blueprint(pgn_api)
 app.register_blueprint(intro_api)
+app.register_blueprint(evaluation_api)
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
 
@@ -95,7 +112,22 @@ def login():
         else:
             error = 'Invalid username or password.'
     return render_template("login.html", error=error, next=next_page)
-    
+
+@app.route('/pastGames', methods=['GET'])
+def pastGames():
+    try:
+        data = request.json
+        new_log = pastGame(
+            user_id=data['user_id'],
+            subject=data['elo'],
+            grade=data['winner'],  
+        )
+        db.session.add(new_log)
+        db.session.commit()
+        return jsonify({'message': 'Game logged successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/logout')
 def logout():
     logout_user()
@@ -110,6 +142,7 @@ def page_not_found(e):
 def index():
     print("Home:", current_user)
     return render_template("index.html")
+
 
 @app.route('/get-move', methods=["POST"])
 def get_move():
@@ -132,6 +165,54 @@ def get_move():
     stockfish.set_elo_rating(elo)
     best_move = stockfish.get_best_move()
     return jsonify({"move": best_move}), 200
+
+
+
+# Base = declarative_base()
+# class ChessFact(Base):
+#     __tablename__ = 'chess_facts'
+#     id = Column(Integer, primary_key=True)
+#     fact = Column(String, nullable=False)
+
+# engine = create_engine('sqlite:///chess_facts.db')
+# Base.metadata.create_all(engine)
+# Session = sessionmaker(bind=engine)
+# session = Session()
+
+
+# # Populate the database with facts if empty
+# if not session.query(ChessFact).first():
+#     facts = [
+#         ChessFact(fact="The longest chess game theoretically possible is 5,949 moves."),
+#         ChessFact(fact="The first chessboard with alternating light and dark squares appeared in Europe in 1090."),
+#         ChessFact(fact="The word 'checkmate' comes from the Persian phrase 'Shah Mat,' meaning 'the king is helpless.'"),
+#         ChessFact(fact="Chess originated in India around the 6th century as a game called 'Chaturanga.'"),
+#         ChessFact(fact="The first modern chess tournament was held in London in 1851."),
+#         ChessFact(fact="The first world chess champion was Wilhelm Steinitz in 1886."),
+#         ChessFact(fact="The shortest possible chess game is called Fool's Mate, which can be achieved in just two moves."),
+#         ChessFact(fact="Chess became a part of the Olympic Games in 1924."),
+#         ChessFact(fact="The number of possible unique chess games is greater than the number of atoms in the observable universe."),
+#         ChessFact(fact="Bobby Fischer, an American chess prodigy, became the youngest U.S. Chess Champion at the age of 14.")
+#     ]
+#     session.add_all(facts)
+#     session.commit()
+
+
+# @app.route('/api/chess/history', methods=['GET'])
+# def chess_history():
+#     """Endpoint to provide a brief history of chess."""
+#     return jsonify({"message": "Chess is a game that dates back over 1,500 years, originating in India. It evolved into its current form in the 15th century in Europe."})
+
+# @app.route('/api/chess/random_fact', methods=['GET'])
+# def random_fact():
+#     """Endpoint to fetch a random chess fact."""
+#     fact = session.query(ChessFact).order_by(func.random()).first()
+#     return jsonify({"fact": fact.fact})
+
+
+@app.route('/test', methods=["POST"])
+def test():
+    return jsonify({"message": "Test successful"}), 200
 
 @app.route('/analyze-move', methods=["POST"])
 def analyze_move():
@@ -161,11 +242,13 @@ def analyze_move():
     if evaluation - last_eval > 0:
         status = "Good"
     if evaluation - last_eval < -0.5:
-        status = "Inaccuracy"
+        status = "Inaccurate"
     if evaluation - last_eval < -1.0:
         status = "Mistake"
     if evaluation - last_eval < -3.0:
         status = "Blunder"
+    else:
+        status = "Neutral"
 
     best_move = stockfish.get_best_move()
     return jsonify({"evaluation": evaluation, "best move": best_move, "status": status}), 200
@@ -203,7 +286,7 @@ def delete_user(user_id):
         return jsonify({'message': 'User deleted successfully'}), 200
     return jsonify({'error': 'User not found'}), 404
 
-@app.route('/users/reset_password/<int:user_id>', methods=['POST'])
+@app.route('/users/reset_password/<int:user_id>', methods=['GET'])
 @login_required
 def reset_password(user_id):
     if current_user.role != 'Admin':
@@ -226,12 +309,16 @@ custom_cli = AppGroup('custom', help='Custom commands')
 def generate_data():
     initSkills()
     initUsers()
+    initLeaderboards()
     initSections()
     initGroups()
     # initChannels()
     initPosts()
     initNestPosts()
     initVotes()
+    initPastGames()
+    initPgn()
+    initEvaluation()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
@@ -253,6 +340,9 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
+        data['pgn'] = [pgn.read() for pgn in Pgn.query.all()]
+        data['evaluations'] = [evaluation.read() for evaluation in Evaluation.query.all()]
+        data['past_games'] = [game.read() for game in pastGame.query.all()]
     return data
 
 # Save extracted data to JSON files
@@ -267,7 +357,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games', 'leaderboards', 'pgn', 'evaluations']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -279,7 +369,9 @@ def restore_data(data):
         _ = Section.restore(data['sections'])
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
-        _ = Post.restore(data['posts'])
+        # # _ = Post.restore(data['posts'])
+        _ = pastGame.restore(data['past_games'])
+        _ = Evaluation.restore(data['evaluations'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
@@ -301,4 +393,5 @@ app.cli.add_command(custom_cli)
 # this runs the flask application on the development server
 if __name__ == "__main__":
     # change name for testing
-    app.run(debug=True, host="0.0.0.0", port="8887")
+    with app.app_context():
+        app.run(debug=True, host="0.0.0.0", port="8887")
