@@ -42,7 +42,7 @@ from api.skill import skill_api
 # database Initialization functions
 from model.pastGame import pastGame, initPastGames
 from model.carChat import CarChat
-from model.leaderboard import initLeaderboards
+from model.leaderboard import Leaderboard, initLeaderboards
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -340,9 +340,10 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
-        data['pgn'] = [pgn.read() for pgn in Pgn.query.all()]
+        data['pgns'] = [pgn.read() for pgn in Pgn.query.all()]
         data['evaluations'] = [evaluation.read() for evaluation in Evaluation.query.all()]
         data['past_games'] = [game.read() for game in pastGame.query.all()]
+        data['leaderboards'] = [leaderboard.read() for leaderboard in Leaderboard.query.all()]
     return data
 
 # Save extracted data to JSON files
@@ -357,7 +358,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games', 'leaderboards', 'pgn', 'evaluations']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games', 'leaderboards', 'pgns', 'evaluations']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -372,6 +373,7 @@ def restore_data(data):
         # # _ = Post.restore(data['posts'])
         _ = pastGame.restore(data['past_games'])
         _ = Evaluation.restore(data['evaluations'])
+        _ = Pgn.restore(data['pgns'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
