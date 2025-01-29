@@ -159,6 +159,8 @@ def get_move():
         stockfish_path = "./stockfish"
     elif system == "Windows":
         stockfish_path = "./stockfish-windows.exe"
+    elif system == "Linux":
+        stockfish_path = "./stockfish-linux"
     else:
         pass
 
