@@ -80,21 +80,19 @@ class pastGameAPI:
 
 
         def delete(self):
-            """Delete a game log."""
+            """Delete a game log by UID."""
             try:
-                # First, try to get UID from query parameters
-                game_uid = request.args.get('uid')
+                # Parse the JSON body to get the UID
+                data = request.get_json()
 
-                # If UID is not in query parameters, look for it in the request body
-                if not game_uid:
-                    data = request.get_json()
-                    if data and 'uid' in data:
-                        game_uid = data['uid']
-                    else:
-                        return {"message": "Game Log UID is required"}, 400
+                if not data or "uid" not in data:
+                    return {"message": "Game Log UID is required"}, 400
+
+                game_uid = data["uid"]
 
                 # Fetch the game log by UID
                 pastGame_log = pastGame.query.filter_by(uid=game_uid).first()
+
                 if not pastGame_log:
                     return {"message": "Game Log not found"}, 404
 
@@ -106,6 +104,8 @@ class pastGameAPI:
                 # Handle unexpected errors
                 print(f"Error deleting game log: {str(e)}")
                 return {"message": f"Unexpected error: {str(e)}"}, 500
+
+
         
         
         def get(self):
