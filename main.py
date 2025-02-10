@@ -540,4 +540,4 @@ app.cli.add_command(custom_cli)
 if __name__ == "__main__":
     # change name for testing
     with app.app_context():
-        app.run(debug=True, host="0.0.0.0", port="8887")
+        app.run(debug=True, host="0.0.0.0", port="8401")
