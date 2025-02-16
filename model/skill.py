@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float
 from __init__ import db, app
+from sqlite3 import IntegrityError
 
 class Skill(db.Model):
     # Defines skills model, and specifies the different columns and their data types
