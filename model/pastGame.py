@@ -79,7 +79,7 @@ class pastGame(db.Model):
 
 def initPastGames():
     with app.app_context():
-        db.drop_all()
+        # Create all tables
         db.create_all()
         
         past_games = [
