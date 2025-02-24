@@ -226,7 +226,7 @@ def initGroups():
             Group(name='Instabox', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
             Group(name='Flavor Fusion', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
             Group(name='Book Reviews', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
-            Group(name='Update The Nest', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
+            Group(name='Update The Nest', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)])
         ]
 
         for group in groups:

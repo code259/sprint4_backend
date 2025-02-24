@@ -308,8 +308,6 @@ def create_user():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-    
-
 
 @app.route('/api/admin/delete_user', methods=['DELETE'])
 def delete_user():
@@ -449,20 +447,17 @@ custom_cli = AppGroup('custom', help='Custom commands')
 # Define a command to run the data generation functions
 @custom_cli.command('generate_data')
 def generate_data():
-    initSkills()
     initUserStats()
-    initUsers()
     initLeaderboards()
+    initUsers()
     initSections()
-    initGroups()
-    # initChannels()
-   # # initChannels()
     initPosts()
-    initNestPosts()
-    initVotes()
+    initGroups()
+    initChannels()
     initPastGames()
     initPgn()
     initEvaluation()
+    initSkills()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):

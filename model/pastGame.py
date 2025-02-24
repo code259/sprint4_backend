@@ -85,8 +85,6 @@ class pastGame(db.Model):
 
 def initPastGames():
     with app.app_context():
-        # Drop the existing table if it exists
-        db.drop_all()
         # Create all tables
         db.create_all()
         
