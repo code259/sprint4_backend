@@ -184,8 +184,8 @@ def initChannels():
         
         #P3 Channels Below
          # Share and Care channels below:
-        DNHSCafe = Group.query.filter_by(_name='Study Room').first()
-        chess_forum = Group.query.filter_by(_name='Chess Forum').first()
+        DNHSCafe = Group.query.filter_by(_name='DNHS Cafe').first()
+        chess_champion = Group.query.filter_by(_name='Chess Champion').first()
         Underground_Music = Group.query.filter_by(_name='Underground Music').first()
         share_and_care_channels = [
             Channel(name='Math', group_id=DNHSCafe.id),
@@ -194,9 +194,9 @@ def initChannels():
             Channel(name='English', group_id=DNHSCafe.id),
             Channel(name='Coding', group_id=DNHSCafe.id),
             Channel(name='History', group_id=DNHSCafe.id),
-            Channel(name='General', group_id=chess_forum.id),
-            Channel(name='Chess Tips', group_id=chess_forum.id),
-            Channel(name='Game Updates', group_id=chess_forum.id),
+            Channel(name='General', group_id=chess_champion.id),
+            Channel(name='Chess Tips', group_id=chess_champion.id),
+            Channel(name='Game Updates', group_id=chess_champion.id),
             Channel(name='Artists', group_id=Underground_Music.id),
             Channel(name='Songs', group_id=Underground_Music.id),
             Channel(name='Genres', group_id=Underground_Music.id),
@@ -250,7 +250,7 @@ def initChannels():
         ]
         
         
-        channels = home_page_channels + shared_interest_channels + vote_for_the_goat_channels + rate_and_relate_channels
+        channels = home_page_channels + shared_interest_channels + share_and_care_channels + vote_for_the_goat_channels + rate_and_relate_channels
         for channel in channels:
             try:
                 db.session.add(channel)

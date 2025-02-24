@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_restful import Api, Resource
 from __init__ import db
 from model.skill import Skill
+from api.jwt_authorize import token_required
 
 # Create Blueprint and API for Skills
 skill_api = Blueprint('skill_api', __name__, url_prefix='/api')
@@ -9,6 +10,7 @@ api = Api(skill_api)
 
 class SkillAPI:
     class _CRUD(Resource):
+        # need to prohibit posting unless logged in somehow...
         def post(self):
             """
             Create a new skill entry.
@@ -31,21 +33,26 @@ class SkillAPI:
             except Exception as e:
                 return {'message': f'Error saving skill: {e}'}, 500
 
+        @token_required()
         def get(self):
             """
             Retrieve a skill by ID or all skills.
             """
-            skill_id = request.args.get('id')
+            # skill_id = request.args.get('id')
+            current_user = g.current_user
+            print(current_user)
+            print("user_id", current_user.id)
 
-            # Fetch a specific skill if ID is provided
-            if skill_id:
-                skill = Skill.query.get(skill_id)
-                if not skill:
-                    return {'message': 'Skill not found'}, 404
-                return jsonify(skill.read())
+            # # Fetch a specific skill if ID is provided
+            # if skill_id:
+            #     skill = Skill.query.get(skill_id)
+            #     if not skill:
+            #         return {'message': 'Skill not found'}, 404
+            #     return jsonify(skill.read())
 
             # Fetch all skills
-            all_skills = Skill.query.all()
+            # all_skills = Skill.query.all()
+            all_skills = Skill.query.filter_by(_user_id=current_user.id).all()
             return jsonify([skill.read() for skill in all_skills])
 
         def put(self):

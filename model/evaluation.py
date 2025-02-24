@@ -46,6 +46,19 @@ class Evaluation(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    @staticmethod
+    def restore(data):
+        for evaluation_data in data:
+            _ = evaluation_data.pop('id', None)  # Remove 'id' from post_data
+            evaluation_name = evaluation_data.get("pgn", None)
+            evaluation = Evaluation.query.filter_by(evaluation=evaluation_name).first()
+            if evaluation:
+                evaluation.update(evaluation_data)
+            else:
+                evaluation = Evaluation(**evaluation_data)
+                evaluation.update(evaluation_data)
+                evaluation.create()
+
 def initEvaluation():
     if Evaluation.query.count() == 0:
         evaluations = [

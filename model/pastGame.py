@@ -1,4 +1,3 @@
-# user.py
 from flask import current_app
 from flask_login import UserMixin
 from datetime import date, datetime
@@ -18,28 +17,25 @@ class pastGame(db.Model):
     """
     pastGame Model
 
-
     Attributes:
         __tablename__ (str): Specifies the name of the table in the database.
         id (Column): The primary key, an integer representing the unique identifier for the user.
-        _uid (Column): A unique string identifier for the user, cannot be null.
-        _winner (Column): A string representing the path to the user's profile picture. It can be null.
-        _elo (Column): A string representing the path to the user's profile picture. It can be null.
-
+        user_id (Column): A foreign key reference to the user.
+        user_name (Column): The name of the user.
+        number_of_wins (Column): An integer representing the number of times the user has beaten the bot.
+        number_of_losses (Column): An integer representing the number of times the user has lost to the bot.
     """
     __tablename__= 'past_games'
 
     id = db.Column(db.Integer, primary_key=True)
-    uid = db.Column(db.String(100), nullable=False)
-    winner = db.Column(db.String(100), nullable=False)
-    elo = db.Column(db.String(100), nullable=False)
-    # timestamp = db.Column(db.String(100), default=str(datetime.ctime))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    number_of_wins = db.Column(db.Integer, nullable=False)
+    number_of_losses = db.Column(db.Integer, nullable=False)
 
-
-    def __init__(self, uid, winner, elo):
-        self.uid = uid
-        self.winner = winner
-        self.elo = elo
+    def __init__(self, user_id, number_of_wins, number_of_losses):
+        self.user_id = user_id
+        self.number_of_wins = number_of_wins
+        self.number_of_losses = number_of_losses
 
     def create(self):
         db.session.add(self)
@@ -47,10 +43,9 @@ class pastGame(db.Model):
         return self
 
     def update(self, data):
-
-        self.uid = data.get('uid', self.uid)
-        self.winner = data.get('winner', self.winner)
-        self.elo = data.get('elo', self.elo)
+        self.user_id = data.get('user_id', self.user_id)
+        self.number_of_wins = data.get('number_of_wins', self.number_of_wins)
+        self.number_of_losses = data.get('number_of_losses', self.number_of_losses)
         try:
             db.session.commit()
         except Exception as e:
@@ -64,18 +59,17 @@ class pastGame(db.Model):
     def read(self):
         return {
             "id": self.id,
-            "uid": self.uid,
-            "winner": self.winner,
-            "elo": self.elo,
-            # "timestamp": self.timestamp
+            "user_id": self.user_id,
+            "number_of_wins": self.number_of_wins,
+            "number_of_losses": self.number_of_losses,
         }
 
     @staticmethod
     def restore(data):
         for game_data in data:
             _ = game_data.pop('id', None)  # Remove 'id' from post_data
-            uid = game_data.get("uid", None)
-            game = pastGame.query.filter_by(uid=uid).first()
+            user_id = game_data.get("user_id", None)
+            game = pastGame.query.filter_by(user_id=user_id).first()
             if game:
                 game.update(game_data)
             else:
@@ -85,15 +79,13 @@ class pastGame(db.Model):
 
 def initPastGames():
     with app.app_context():
-        # Drop the existing table if it exists
-        db.drop_all()
         # Create all tables
         db.create_all()
         
         past_games = [
-            pastGame(uid="niko", winner="winner1", elo="elo100"),
-            pastGame(uid="john", winner="winner2", elo="elo2000"),
-            pastGame(uid="shane", winner="winner3", elo="elo300"),
+            pastGame(user_id=1, number_of_wins=3, number_of_losses=1),
+            pastGame(user_id=2, number_of_wins=2, number_of_losses=4),
+            pastGame(user_id=3, number_of_wins=5, number_of_losses=2),
         ]
         for game in past_games:
             db.session.add(game)

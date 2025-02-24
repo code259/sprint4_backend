@@ -303,6 +303,7 @@ class User(db.Model, UserMixin):
     @car.setter
     def car(self, car):
         self._car = car
+
     def create(self, inputs=None):
         """
         Adds a new record to the table and commits the transaction.
@@ -314,8 +315,16 @@ class User(db.Model, UserMixin):
             User: The created user object, or None on error.
         """
         try:
+            print(f"Adding user to session: {self.name}")
             db.session.add(self)  # add prepares to persist person object to Users table
             db.session.commit()  # SqlAlchemy "unit of work pattern" requires a manual commit
+            print(f"Adding added to session and committed: {self.name}")
+
+            if self in db.session:
+                print(f"User {self.name} is in the session.")
+            else:
+                print(f"User {self.name} is NOT in the session.")
+
             if inputs:
                 self.update(inputs)
             return self
@@ -512,7 +521,29 @@ def initUsers():
         
         for user in users:
             try:
+                print(f"Creating user: {user.name}")
                 user.create()
+                print(f"User created: {user.name}")
             except IntegrityError:
                 '''fails with bad or duplicate data'''
                 db.session.remove()
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error: Could not create user {user.name}. Error: {e}")
+
+        try:
+            db.session.commit()
+            print("Session committed successfully.")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error committing session: {e}")
+
+        if db.session.dirty:
+            print(f"Pending changes in the session: {db.session.dirty}")
+        else:
+            print("No pending changes in the session.")
+
+        all_users = User.query.all()
+        print(f"Total users in the database: {len(all_users)}")
+        for user in all_users:
+            print(f"User in database: {user.name}, UID: {user.uid}, passcode: {user.password}, role: {user.role}")

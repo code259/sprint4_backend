@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float
 from __init__ import db, app
+from sqlite3 import IntegrityError
 
 class Skill(db.Model):
     # Defines skills model, and specifies the different columns and their data types
@@ -43,6 +44,24 @@ class Skill(db.Model):
         except Exception as e:
             db.session.rollback()
             raise e
+
+    def update(self, data):
+        for key, value in data.items():
+            setattr(self, key, value)
+        db.session.commit()
+    
+    @staticmethod
+    def restore(data):
+        for skill_data in data:
+            _ = skill_data.pop('id', None)  # Remove 'id' from post_data
+            skill_name = skill_data.get("skill_name", None)
+            skill = Skill.query.filter_by(_skill_name=skill_name).first()
+            if skill:
+                skill.update(skill_data)
+            else:
+                skill = Skill(**skill_data)
+                skill.update(skill_data)
+                skill.create()
 
 def initSkills():
     # Function to initialize the "skills" table and add test data
