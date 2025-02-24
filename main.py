@@ -482,7 +482,8 @@ def extract_data():
         data['pgns'] = [pgn.read() for pgn in Pgn.query.all()]
         data['evaluations'] = [evaluation.read() for evaluation in Evaluation.query.all()]
         data['past_games'] = [game.read() for game in pastGame.query.all()]
-        data['leaderboards'] = [leaderboard.read() for leaderboard in Leaderboard.query.all()]
+        data['skills'] = [skill.read() for skill in Skill.query.all()]
+        # data['leaderboards'] = [leaderboard.read() for leaderboard in Leaderboard.query.all()]
     return data
 
 # Save extracted data to JSON files
@@ -497,7 +498,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games', 'leaderboards', 'pgns', 'evaluations']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'past_games', 'pgns', 'evaluations', 'skills']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -513,6 +514,7 @@ def restore_data(data):
         _ = pastGame.restore(data['past_games'])
         _ = Evaluation.restore(data['evaluations'])
         _ = Pgn.restore(data['pgns'])
+        _ = Skill.restore(data['skills'])
     print("Data restored to the new database.")
 
 # Define a command to backup data

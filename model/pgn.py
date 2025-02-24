@@ -62,12 +62,27 @@ class Pgn(db.Model):
             return None
         return self
 
+    def update(self, data):
+
+        # self._pgn = data.get('pgn', self.uid)
+        # self._date = data.get('date', self.winner)
+        # self._name = data.get('name', self.elo)
+        # self._user_id = data.get('user_id', self.elo)
+        # try:
+        #     db.session.commit()
+        # except Exception as e:
+        #     db.session.rollback()
+        #     raise e
+        for key, value in data.items():
+            setattr(self, key, value)
+        db.session.commit()
+
     @staticmethod
     def restore(data):
         for pgn_data in data:
             _ = pgn_data.pop('id', None)  # Remove 'id' from post_data
-            pgn_name = pgn_data.get("pgn", None)
-            pgn = Pgn.query.filter_by(pgn=pgn_name).first()
+            pgn_name = pgn_data.get("name", None)
+            pgn = Pgn.query.filter_by(_name=pgn_name).first()
             if pgn:
                 pgn.update(pgn_data)
             else:

@@ -45,6 +45,24 @@ class Skill(db.Model):
             db.session.rollback()
             raise e
 
+    def update(self, data):
+        for key, value in data.items():
+            setattr(self, key, value)
+        db.session.commit()
+    
+    @staticmethod
+    def restore(data):
+        for skill_data in data:
+            _ = skill_data.pop('id', None)  # Remove 'id' from post_data
+            skill_name = skill_data.get("skill_name", None)
+            skill = Skill.query.filter_by(_skill_name=skill_name).first()
+            if skill:
+                skill.update(skill_data)
+            else:
+                skill = Skill(**skill_data)
+                skill.update(skill_data)
+                skill.create()
+
 def initSkills():
     # Function to initialize the "skills" table and add test data
     with app.app_context():
