@@ -96,7 +96,7 @@ class PostAPI:
                 return {'message': 'Post not found'}, 404
             # Update the post
             post._title = data['title']
-            post._content = data['content']
+            post._comment = data['comment']
             post._channel_id = data['channel_id']
             # Save the post
             post.update()
