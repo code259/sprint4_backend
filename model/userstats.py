@@ -2,27 +2,27 @@ from __init__ import db, app
 from model.user import User  # Import User model
 from __init__ import db
 
-class UserStats(db.Model):
-    __tablename__ = 'user_stats'
+# class UserStats(db.Model):
+#     __tablename__ = 'user_stats'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)  # Link to User
-    wins = db.Column(db.Integer, default=0)
-    losses = db.Column(db.Integer, default=0)
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)  # Link to User
+#     wins = db.Column(db.Integer, default=0)
+#     losses = db.Column(db.Integer, default=0)
     
-    # Relationship to get User details
-    user = db.relationship('User', backref=db.backref('stats', uselist=False))
+#     # Relationship to get User details
+#     user = db.relationship('User', backref=db.backref('stats', uselist=False))
 
-    def read(self):
-        """
-        Return user stats as JSON, including user's name.
-        """
-        return {
-            "user_id": self.user_id,
-            "name": self.user.name if self.user else "Unknown",  # Get name from User table
-            "wins": self.wins,
-            "losses": self.losses
-        }
+#     def read(self):
+#         """
+#         Return user stats as JSON, including user's name.
+#         """
+#         return {
+#             "user_id": self.user_id,
+#             "name": self.user.name if self.user else "Unknown",  # Get name from User table
+#             "wins": self.wins,
+#             "losses": self.losses
+#         }
 
 
 class UserStats(db.Model):
