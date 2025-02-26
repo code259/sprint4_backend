@@ -83,7 +83,6 @@ class pastGameAPI:
     
 
         def get(self):
-            """Get all past game records with user names"""
             games = pastGame.query.all()
             json_ready = []
             for game in games:
@@ -101,5 +100,17 @@ class pastGameAPI:
 
             return jsonify(json_ready)
 
+    class _BULK_CRUD(Resource):
+        def get(self):
+            games = pastGame.query.all()
+            json_ready = []
+            for game in games:
+                game_data = game.read()
+                user = User.query.filter_by(id=game_data['user_id']).first()
+                game_data['user_name'] = user.name
+                json_ready.append(game_data)
+            return jsonify(json_ready)
+
 # Register the resource
 api.add_resource(pastGameAPI._CRUD, '/pastgame')
+api.add_resource(pastGameAPI._BULK_CRUD, '/pastgames')
