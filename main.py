@@ -60,10 +60,12 @@ from model.nestPost import NestPost, initNestPosts # Justin added this, custom f
 from model.vote import Vote, initVotes
 from model.pgn import Pgn, initPgn
 from model.evaluation import Evaluation, initEvaluation
+from api.admin_update import admin_update_api
 # server only Views
 
 # register URIs for api endpoints
 app.register_blueprint(messages_api) # Adi added this, messages for his website
+app.register_blueprint(admin_update_api)
 app.register_blueprint(user_api)
 app.register_blueprint(pfp_api)
 app.register_blueprint(post_api)
